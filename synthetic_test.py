@@ -5,7 +5,6 @@ from transformers import pipeline, AutoTokenizer
 from huggingface_hub import login
 import uuid
 import datetime
-
 import os
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -139,6 +138,7 @@ def run_inference(prompt: str) -> str:
 # ── Main loop ─────────────────────────────────────────────────────────────────
 TEXTS_PER_DATASET = 10
 MAX_TOKENS = 30000
+OUT_PATH = "synth_test.tsv"
 
 rows = []
 
@@ -148,7 +148,6 @@ for dataset_name, prompt_styles in dataset_prompt_map.items():
     print(f"Styles  : {prompt_styles}")
     print(f"{'='*60}")
 
-    # Stream just enough rows
     try:
         ds = load_dataset(dataset_name, split="train", streaming=True)
     except Exception as e:
@@ -156,7 +155,7 @@ for dataset_name, prompt_styles in dataset_prompt_map.items():
         continue
 
     texts = []
-    raw_metadata = []  # store whatever extra fields the row has beyond 'text'
+    raw_metadata = []
     for i, row in enumerate(ds):
         if i >= TEXTS_PER_DATASET:
             break
@@ -168,7 +167,7 @@ for dataset_name, prompt_styles in dataset_prompt_map.items():
             text = tokenizer.decode(encoded[:MAX_TOKENS], skip_special_tokens=True)
 
         texts.append(text)
-        raw_metadata.append(row)  # everything else is metadata
+        raw_metadata.append(row)
 
     for text_idx, (text, meta) in enumerate(zip(texts, raw_metadata)):
         token_count = len(tokenizer.encode(text))
@@ -177,34 +176,30 @@ for dataset_name, prompt_styles in dataset_prompt_map.items():
             print(f"  [{dataset_name}] text {text_idx+1}/{TEXTS_PER_DATASET} | style={style} | tokens={token_count:,}")
 
             try:
-                prompt  = build_prompt(style, text)
-                synth   = run_inference(prompt)
+                prompt = build_prompt(style, text)
+                synth  = run_inference(prompt)
             except Exception as e:
                 print(f"    [ERROR] {e}")
                 synth = ""
 
-            rows.append({
-                # ── identity ──────────────────────────────────────────
-                "id":             str(uuid.uuid4()),
-                "generated_at":   datetime.datetime.utcnow().isoformat(),
-                # ── source provenance ─────────────────────────────────
-                "source_dataset": dataset_name,
-                "source_subset":  dataset_name.split("/")[-1],   # e.g. arxiv_papers_filtered
-                "text_index":     text_idx,                       # 0-9 within this dataset
-                # ── metadata from the original row ────────────────────
-                "source_metadata": str(meta),                     # full dict as string; split if needed
-                # ── model / generation info ───────────────────────────
-                "model":          MODEL_ID,
-                "prompt_style":   style,
+            new_row = {
+                "id":                 str(uuid.uuid4()),
+                "generated_at":       datetime.datetime.utcnow().isoformat(),
+                "source_dataset":     dataset_name,
+                "source_subset":      dataset_name.split("/")[-1],
+                "text_index":         text_idx,
+                "source_metadata":    str(meta),
+                "model":              MODEL_ID,
+                "prompt_style":       style,
                 "source_token_count": token_count,
-                # ── content ───────────────────────────────────────────
-                "original_text":  text,
-                "synth_text":     synth,
-            })
+                "original_text":      text,
+                "synth_text":         synth,
+            }
+            rows.append(new_row)
 
-# ── Save ──────────────────────────────────────────────────────────────────────
-synth_df = pd.DataFrame(rows)
-out_path  = "synth_test.tsv"
-synth_df.to_csv(out_path, sep='\t', index=False)
-print(f"\nDone. {len(synth_df)} rows saved to {out_path}")
-print(synth_df[["source_dataset", "prompt_style", "source_token_count"]].value_counts().to_string())
+            # ── Save after each generation ────────────────────────────
+            write_header = not os.path.exists(OUT_PATH)
+            pd.DataFrame([new_row]).to_csv(OUT_PATH, sep='\t', index=False, mode='a', header=write_header)
+            print(f"    [SAVED] row {len(rows)} → {OUT_PATH}")
+
+print(f"\nDone. {len(rows)} rows saved to {OUT_PATH}")
