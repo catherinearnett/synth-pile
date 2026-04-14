@@ -42,6 +42,7 @@ pip install -r requirements.txt
 ```
 
 A HuggingFace token with access to the Common Pile datasets is required. Set it as `HF_login_synth` in your environment before running.
+This script uses Gemma 3 1B, which has gated access. The Hugging Face account that is used to generate the API key must have been granted access to the model.
 
 ```bash
 python synthethic_test.py
