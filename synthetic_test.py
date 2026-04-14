@@ -6,8 +6,9 @@ from huggingface_hub import login
 import uuid
 import datetime
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
 import os
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
 login(token=os.environ["HF_login_synth"])
 
 # ── Model setup ───────────────────────────────────────────────────────────────
@@ -137,6 +138,7 @@ def run_inference(prompt: str) -> str:
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 TEXTS_PER_DATASET = 10
+MAX_TOKENS = 30000
 
 rows = []
 
@@ -158,8 +160,15 @@ for dataset_name, prompt_styles in dataset_prompt_map.items():
     for i, row in enumerate(ds):
         if i >= TEXTS_PER_DATASET:
             break
-        texts.append(row.pop("text"))        # pull text out
-        raw_metadata.append(row)             # everything else is metadata
+        text = row.pop("text")
+
+        # Truncate to MAX_TOKENS if needed
+        encoded = tokenizer.encode(text)
+        if len(encoded) > MAX_TOKENS:
+            text = tokenizer.decode(encoded[:MAX_TOKENS], skip_special_tokens=True)
+
+        texts.append(text)
+        raw_metadata.append(row)  # everything else is metadata
 
     for text_idx, (text, meta) in enumerate(zip(texts, raw_metadata)):
         token_count = len(tokenizer.encode(text))
