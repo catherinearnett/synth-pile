@@ -53,7 +53,7 @@ flashinfer-cubin==0.6.6
 flashinfer-python==0.6.6
 flatbuffers==25.12.19
 frozenlist==1.8.0
-fsspec==2026.3.0
+fsspec==2026.2.0
 gast==0.7.0
 gguf==0.18.0
 google-pasta==0.2.0
