@@ -47,3 +47,7 @@ This script uses Gemma 3 1B, which has gated access. The Hugging Face account th
 ```bash
 python synthethic_test.py
 ```
+
+## Sample Outputs
+
+`synth_test.tsv` is a sample of the synthetic generations.
