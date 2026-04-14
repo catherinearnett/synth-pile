@@ -6,6 +6,10 @@ from huggingface_hub import login
 import uuid
 import datetime
 
+import os
+login(token=os.environ["HF_login_synth"])
+
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 login(token=HF_login_synth)
 
