@@ -6,12 +6,9 @@ from huggingface_hub import login
 import uuid
 import datetime
 
+# ── Auth ──────────────────────────────────────────────────────────────────────
 import os
 login(token=os.environ["HF_login_synth"])
-
-
-# ── Auth ──────────────────────────────────────────────────────────────────────
-login(token=HF_login_synth)
 
 # ── Model setup ───────────────────────────────────────────────────────────────
 MODEL_ID = "google/gemma-3-1b-it"
