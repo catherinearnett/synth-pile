@@ -44,7 +44,5 @@ pip install -r requirements.txt
 A HuggingFace token with access to the Common Pile datasets is required. Set it as `HF_login_synth` in your environment before running.
 
 ```bash
-python synth_gen.py
+python synthethic_test.py
 ```
-
-A CUDA-capable GPU is expected.
