@@ -48,6 +48,8 @@ This script uses Gemma 3 1B, which has gated access. The Hugging Face account th
 python synthethic_test.py
 ```
 
+Before running the large batches, make sure to add a huggingface token to `run_single.sh` if using Gemma 3 or another gated model.
+
 ## Run
 
 ```
