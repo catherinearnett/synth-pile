@@ -48,6 +48,16 @@ This script uses Gemma 3 1B, which has gated access. The Hugging Face account th
 python synthethic_test.py
 ```
 
+## Run
+
+```
+ssh <username>@roihu.csc.fi
+mkdir -p ~/synthpile/outputs ~/synthpile/logs
+cd ~/synthpile
+
+bash run_all.sh
+```
+
 ## Sample Outputs
 
 `synth_test.tsv` is a sample of the synthetic generations.
